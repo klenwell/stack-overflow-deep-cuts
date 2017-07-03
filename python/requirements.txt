@@ -1,0 +1,5 @@
+# StackOverflow API: https://github.com/lucjon/Py-StackExchange
+-e git+https://github.com/lucjon/Py-StackExchange.git#egg=Py-StackExchange
+
+# YAML parsing (for secrets)
+PyYAML
