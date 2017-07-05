@@ -29,8 +29,8 @@ config = {
     'api_key'       : None,
     'accepted'      : False,
     'closed'        : False,
-    'max_hours'     : 24,
-    'min_hours'     : 4,
+    'max_hours'     : 48,
+    'min_hours'     : 2,
 
     # Tags are comma-separated OR (not AND) lists of tags.
     'include_tags'  : '',
@@ -95,10 +95,20 @@ def hours_ago_to_unix_timestamp(hours_ago):
 # Helper Classes
 #
 class Carousel(object):
-    # Based on
+    # Based on https://stackoverflow.com/a/2777223/1093087
+    # Because Python 3 iters don't have a next method and next(iter) conflicts with
+    # pdb's next method.
     def __init__(self, collection):
         self.collection = collection
         self.index = 0
+
+    @property
+    def first(self):
+        return self.collection[0]
+
+    @property
+    def last(self):
+        return self.collection[-1]
 
     def next(self):
         try:
@@ -132,7 +142,7 @@ def main():
     config['api_key'] = read_stackoverflow_secrets('api_key')
     pdb.set_trace()
 
-def test():
+def sandbox():
     # Use this to test and debug script in main block below.
     usage()
     config['api_key'] = read_stackoverflow_secrets('api_key')
@@ -142,4 +152,4 @@ def test():
     pdb.set_trace()
 
 if __name__ == '__main__':
-    test()
+    sandbox()
