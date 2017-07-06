@@ -19,7 +19,12 @@ from models.scored_question import ScoredQuestion
 USAGE = """
 USAGE:
 
-TBA
+Use fetch_deep_cuts method to fetch a collection of results. You can then cycle
+through them using next and prev methods.
+
+> cuts = fetch_deep_cuts('python')
+> cuts.next()
+> cuts.prev()
 """
 
 #
@@ -103,12 +108,18 @@ class Carousel(object):
         self.index = 0
 
     @property
+    def current(self):
+        return self.collection[self.index]
+
+    @property
     def first(self):
-        return self.collection[0]
+        self.index = 0
+        return self.current
 
     @property
     def last(self):
-        return self.collection[-1]
+        self.index = len(self.collection) - 1
+        return self.current
 
     def next(self):
         try:
@@ -126,7 +137,7 @@ class Carousel(object):
             print("You've reached first item. Going to last item.")
             self.index = len(self.collection)
             return self.prev()
-        return self.collection[self.index]
+        return self.current
 
     def __iter__(self):
         return self
@@ -152,4 +163,4 @@ def sandbox():
     pdb.set_trace()
 
 if __name__ == '__main__':
-    sandbox()
+    main()
