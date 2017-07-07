@@ -12,6 +12,7 @@ import stackexchange
 import yaml
 
 from models.scored_question import ScoredQuestion
+from models.carousel import Carousel
 
 #
 # Constants
@@ -22,9 +23,9 @@ USAGE:
 Use fetch_deep_cuts method to fetch a collection of results. You can then cycle
 through them using next and prev methods.
 
-> cuts = fetch_deep_cuts('python')
-> cuts.next()
-> cuts.prev()
+> cuts = deep_cuts('python')
+> cuts.next
+> cuts.prev
 """
 
 #
@@ -48,10 +49,12 @@ config = {
 def usage():
     print(USAGE)
 
-def fetch_deep_cuts(tags, **options):
+def deep_cuts(tags, **options):
     options['include_tags'] = tags
     questions = fetch_questions(**options)
-    return Carousel(ScoredQuestion.filter_search_results(questions))
+    carousel = Carousel(ScoredQuestion.filter_search_results(questions))
+    print("Fetched %s deep cuts." % len(carousel))
+    return carousel
 
 #
 # Private Methods
@@ -97,55 +100,6 @@ def hours_ago_to_unix_timestamp(hours_ago):
     return int(time.mktime((datetime.now() - timedelta(hours=hours_ago)).timetuple()))
 
 #
-# Helper Classes
-#
-class Carousel(object):
-    # Based on https://stackoverflow.com/a/2777223/1093087
-    # Because Python 3 iters don't have a next method and next(iter) conflicts with
-    # pdb's next method.
-    def __init__(self, collection):
-        self.collection = collection
-        self.index = 0
-
-    @property
-    def current(self):
-        return self.collection[self.index]
-
-    @property
-    def first(self):
-        self.index = 0
-        return self.current
-
-    @property
-    def last(self):
-        self.index = len(self.collection) - 1
-        return self.current
-
-    def next(self):
-        try:
-            result = self.collection[self.index]
-            self.index += 1
-        except IndexError:
-            print("You've reached last item. Returning to first item.")
-            self.index = 0
-            result = self.next()
-        return result
-
-    def prev(self):
-        self.index -= 1
-        if self.index < 0:
-            print("You've reached first item. Going to last item.")
-            self.index = len(self.collection)
-            return self.prev()
-        return self.current
-
-    def __iter__(self):
-        return self
-
-    def __len__(self):
-        return len(self.collection)
-
-#
 # Main Block
 #
 def main():
@@ -158,7 +112,7 @@ def sandbox():
     usage()
     config['api_key'] = read_stackoverflow_secrets('api_key')
     tags = 'jquery'
-    questions = fetch_deep_cuts(tags)
+    questions = deep_cuts(tags)
     print(len(questions))
     pdb.set_trace()
 
