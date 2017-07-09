@@ -31,6 +31,10 @@ Adjust Python version (here `3.6.1`) as appropriate:
     pyenv local stack-overflow-deep-cuts
     pip install -r requirements.txt
 
+### Tests
+
+    nosetests -c nose.cfg
+
 ### Run Script
 
     python main.py
