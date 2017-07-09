@@ -1,4 +1,5 @@
 from datetime import datetime
+from math import log
 
 
 class ScoredQuestion(object):
@@ -15,41 +16,37 @@ class ScoredQuestion(object):
     # Class Methods
     #
     @staticmethod
-    def filter_search_results(questions, sort=True):
+    def from_api_questions(api_questions):
         scored_questions = []
 
-        for question in questions:
-            scored_question = ScoredQuestion(question)
-            if scored_question.is_valid() and scored_question.is_deep_cut():
+        for api_question in api_questions:
+            scored_question = ScoredQuestion(api_question)
+            if scored_question.is_valid():
                 scored_questions.append(scored_question)
 
-        if sort:
-            scored_questions = sorted(scored_questions, key=lambda q: q.score, reverse=True)
-
         return scored_questions
+
+    @staticmethod
+    def filter_deep_cuts(scored_questions):
+        deep_cuts = []
+
+        for scored_question in scored_questions:
+            if scored_question.is_deep_cut():
+                deep_cuts.append(scored_question)
+
+        return deep_cuts
+
+    @staticmethod
+    def order_by_score(scored_questions):
+        return sorted(scored_questions, key=lambda q: q.score, reverse=True)
 
     #
     # Properties
     #
     @property
     def score(self):
-        """Scores question based on a subjective formula of your device.
-        TODO: include comments as factor since a lot of questions get resolved in
-        comments before any answer submitted.
-        """
-        score = 0.0
-
-        # Bonuses
-        score += float(self.age.seconds) / (24 * self.HOUR_SECS) * 100
-        score += self.owner_reputation / 20.0
-        score += self.question.score * 20.0
-        score += self.owner_accept_rate
-
-        # Penalties
-        answer_count_penalty = self.answer_count * 500.0
-        score = max(score - answer_count_penalty, self.MIN_QUESTION_SCORE + 1)
-
-        return int(score)
+        # Score based on an algorithm of your own device. Should return numeric value.
+        return self.score_by_rep_age_and_upvotes()
 
     @property
     def title(self):
@@ -102,14 +99,14 @@ class ScoredQuestion(object):
     #
     # Instance Methods
     #
-    def __init__(self, stack_question):
-        self.question = stack_question
-
-    def is_answered(self):
-        return self.question.is_answered
+    def __init__(self, api_question):
+        self.question = api_question
 
     def is_valid(self):
         return hasattr(self.question, 'owner')
+
+    def is_answered(self):
+        return self.question.is_answered
 
     def is_deep_cut(self):
         # Might also be called is_worthy().
@@ -119,6 +116,34 @@ class ScoredQuestion(object):
                self.score >= self.MIN_QUESTION_SCORE and \
                self.owner_accept_rate >= self.MIN_OWNER_ACCEPT_RATE
 
+    #
+    # Scoring Algorithms
+    #
+    def score_by_rep_age_and_upvotes(self):
+        # Prefer reputable owners with high acceptance rather
+        owner_bonus = log(self.owner_reputation, 1.05) * (self.owner_accept_rate / 100.0)
+
+        # Prefer older questions
+        age_bonus = log(self.age_in_hours, 1.05)
+
+        # Bonus for question upvotes: 20 pts per net upvote.
+        upvote_bonus = self.question.score * 20.0
+
+        # Penalize questions with answers.
+        answers_penalty = 1.0 / (self.answer_count + 1)
+
+        # Heavily penalize questions marked answered.
+        answered_penalty = 1000 if self.is_answered() else 0
+
+        # TODO: Penalize questions with a lot of comments (as they likely tend toward an answer).
+        # The problem: API does not return comment count in results. Requires separate call to
+        # questions endpoint to obtain.
+
+        return (owner_bonus + age_bonus + upvote_bonus - answered_penalty) * answers_penalty
+
+    #
+    # Magic Methods
+    #
     def __repr__(self):
         formatting = """\
 <ScoredQuestion @ %s

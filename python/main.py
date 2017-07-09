@@ -51,15 +51,18 @@ def usage():
 
 def deep_cuts(tags, **options):
     options['include_tags'] = tags
-    questions = fetch_questions(**options)
-    carousel = Carousel(ScoredQuestion.filter_search_results(questions))
+    api_questions = fetch_questions_from_api(**options)
+    scored_questions = ScoredQuestion.from_api_questions(api_questions)
+    deep_cuts = ScoredQuestion.filter_deep_cuts(scored_questions)
+    sorted_deep_cuts = ScoredQuestion.order_by_score(deep_cuts)
+    carousel = Carousel(sorted_deep_cuts)
     print("Fetched %s deep cuts." % len(carousel))
     return carousel
 
 #
 # Private Methods
 #
-def fetch_questions(**options):
+def fetch_questions_from_api(**options):
     # Options
     api_key = options.get('api_key', config.get('api_key'))
     accepted = options.get('accepted', config.get('accepted'))
@@ -112,9 +115,14 @@ def sandbox():
     usage()
     config['api_key'] = read_stackoverflow_secrets('api_key')
     tags = 'jquery'
-    questions = deep_cuts(tags)
+
+    api_questions = fetch_questions_from_api(include_tags = tags)
+    scored_questions = ScoredQuestion.from_api_questions(api_questions)
+    sorted_questions = ScoredQuestion.order_by_score(scored_questions)
+
+    questions = Carousel(sorted_questions)
     print(len(questions))
     pdb.set_trace()
 
 if __name__ == '__main__':
-    main()
+    sandbox()
