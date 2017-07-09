@@ -1,5 +1,5 @@
 # Stack Overflow Deep Cuts
-Finds overlooked Stack Overflow questions worth answering.
+Finds unanswered or overlooked Stack Overflow questions worth answering.
 
 ## Installation
 
@@ -20,7 +20,7 @@ Finds overlooked Stack Overflow questions worth answering.
 
 ## Python Version
 
-It is recommended you use [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv) to localize your environment.
+Written for Python 3. It is recommended you use [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv) to localize your environment.
 
 ### Install Dependencies
 
