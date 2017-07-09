@@ -106,8 +106,8 @@ def hours_ago_to_unix_timestamp(hours_ago):
 # Main Block
 #
 def main():
-    usage()
     config['api_key'] = read_stackoverflow_secrets('api_key')
+    usage()
     pdb.set_trace()
 
 def sandbox():
@@ -125,4 +125,4 @@ def sandbox():
     pdb.set_trace()
 
 if __name__ == '__main__':
-    sandbox()
+    main()

@@ -108,9 +108,13 @@ class ScoredQuestion(object):
     def is_answered(self):
         return self.question.is_answered
 
+    def is_closed(self):
+        return hasattr(self.question, 'closed_reason')
+
     def is_deep_cut(self):
         # Might also be called is_worthy().
-        return not self.is_answered() and \
+        return not self.is_closed() and \
+               not self.is_answered() and \
                self.owner_reputation >= self.MIN_OWNER_REPUTATION and \
                self.answer_count <= self.MAX_QUESTION_ANSWERS and \
                self.score >= self.MIN_QUESTION_SCORE and \
@@ -132,14 +136,20 @@ class ScoredQuestion(object):
         # Penalize questions with answers.
         answers_penalty = 1.0 / (self.answer_count + 1)
 
+        # Heavily penalize questions marked closed.
+        closed_penalty = 10000 if self.is_closed() else 0
+
         # Heavily penalize questions marked answered.
         answered_penalty = 1000 if self.is_answered() else 0
 
         # TODO: Penalize questions with a lot of comments (as they likely tend toward an answer).
         # The problem: API does not return comment count in results. Requires separate call to
         # questions endpoint to obtain.
+        bonuses = owner_bonus + age_bonus + upvote_bonus
+        penalties = closed_penalty + answered_penalty
+        penalty_fractionalizers = answers_penalty
 
-        return (owner_bonus + age_bonus + upvote_bonus - answered_penalty) * answers_penalty
+        return (bonuses - penalties) * penalty_fractionalizers
 
     #
     # Magic Methods
